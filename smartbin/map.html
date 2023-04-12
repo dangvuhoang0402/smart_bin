@@ -1,0 +1,171 @@
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>LeafletJS - OpenStreetMap API by Seth Phat</title>
+	<script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"> </script>
+	<script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-database.js"> </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css" integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js" integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg==" crossorigin=""></script>
+	<style>
+		#sethPhatMap {
+			width:100%;
+			height:100%;
+		}
+		
+		.map-popup-content {
+			width: 300px;
+		}
+		
+		.map-popup-content .left {
+			float:left;
+			width: 40%;
+		}
+		.map-popup-content .left img {
+			width:100%;
+			height:100px;
+			margin: -15px 0 -15px -20px;
+			border-radius:12px;
+		}
+	
+		.map-popup-content .right {
+			float:left;
+			width: 60%;
+		}
+		
+		.clearfix {
+			clear:both;
+		}
+	</style>
+</head>
+<body>
+	 <div id="sethPhatMap"></div>
+</body>
+
+<script>
+	const firebaseConfig = {
+		apiKey: "AIzaSyAALQvKo4d3bWFdlkAVXJr9h5blDDArKV4",
+		authDomain: "smartbin-8cbfd.firebaseapp.com",
+		databaseURL: "https://smartbin-8cbfd-default-rtdb.firebaseio.com",
+		projectId: "smartbin-8cbfd",
+		storageBucket: "smartbin-8cbfd.appspot.com",
+		messagingSenderId: "229968180977",
+		appId: "1:229968180977:web:faad5ab5958e98a6f99b50"
+	};
+	firebase.initializeApp(firebaseConfig);
+
+	var database=firebase.database();
+
+	var Latitude=100;
+	var Longitude=100;
+	var Capacity=0;
+	var State="Không sử dụng";
+      // Call fetchData() to retrieve the data and update the HTML elements
+	var mapObj = null;
+	var defaultCoord = [10.7743, 106.6669]; // coord mặc định, 9 giữa HCMC
+	var zoomLevel = 13;
+	var mapConfig = {
+		attributionControl: false, // để ko hiện watermark nữa, nếu bị liên hệ đòi thì nhớ open nha
+		center: defaultCoord, // vị trí map mặc định hiện tại
+		zoom: zoomLevel, // level zoom
+	};
+	window.onload = function() {
+		// init map
+		mapObj = L.map('sethPhatMap', mapConfig);
+		
+		// add tile để map có thể hoạt động, xài free từ OSM
+		L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+		}).addTo(mapObj);
+		
+		// tạo marker
+		var popupOption = {
+		  	className: "map-popup-content",
+		};
+		var marker = addMarker([Latitude, Longitude], 
+        `<div class='left'>
+                                <img src=https://i.ibb.co/Nnf6P1h/1.jpg/>
+                                </div>
+                                <div class='right'>
+                                    <b>Smartbin</b>
+                                    <p>
+                                        Hiện tôi đang chứa: 
+								`
+                                    +
+                                    Capacity.toString()
+                                    +
+                                    `% thể tích
+                                </div><div class='clearfix'></div>`
+									+
+									`
+                                    <p>
+                                        Trạng thái của tôi:
+								`
+                                    +
+                                    State.toString()
+                                    +
+                                    `
+                                </div><div class='clearfix'></div>`, popupOption);  
+
+    // Listen for changes in Firebase database and update the marker
+    database.ref("/test/Latitude").on("value", function(snapshot) {
+        var temp = snapshot.val();
+        Latitude = temp;
+        marker.setLatLng([Latitude, Longitude]);
+    });
+    database.ref("/test/Longitude").on("value", function(snapshot) {
+        var temp = snapshot.val();
+        Longitude = temp;
+        marker.setLatLng([Latitude, Longitude]);
+    });
+    database.ref("/test/Capacity").on("value", function(snapshot) {
+        var temp = snapshot.val();
+        Capacity = temp;
+	});
+	database.ref("/test/state").on("value", function(snapshot) {
+    	var temp = snapshot.val();
+    	State = temp;
+        marker.setPopupContent(`<div class='left'>
+                                    <img src=https://i.ibb.co/Nnf6P1h/1.jpg/>
+                                </div>
+                                <div class='right'>
+                                    <b>Smartbin</b>
+                                    <p>
+                                        Hiện tôi đang chứa: 
+								`
+                                    +
+                                    Capacity.toString()
+                                    +
+                                    `% thể tích
+                                </div><div class='clearfix'></div>`
+									+
+									`
+                                    <p>
+                                        Trạng thái của tôi:
+								`
+                                    +
+                                    State.toString()
+                                    +
+                                    `
+                                </div><div class='clearfix'></div>`);
+									
+    });
+	}
+	
+	function addMarker(coord, popupContent, popupOptionObj, markerObj) {
+		if (!popupOptionObj) {
+			popupOptionObj = {};
+		}
+		if (!markerObj) {
+			markerObj = {};
+		}
+		
+		var marker = L.marker(coord, markerObj).addTo(mapObj);
+		var popup = L.popup(popupOptionObj);
+		popup.setContent(popupContent);
+		// binding
+		marker.bindPopup(popup);
+		
+		return marker;
+	}	
+</script>
+</html>
