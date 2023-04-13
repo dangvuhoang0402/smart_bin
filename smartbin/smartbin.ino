@@ -26,12 +26,12 @@ int cap=0;
 #if __has_include("wificonfig.h")
 #include "wificonfig.h"
 #else
-const char* googleApiKey = "AIzaSyDtdRLrbDRdarsow6hW8RkL6dnsHitVDv4";
-const char* ssid = "KTMT - SinhVien";
-const char* passwd = "sinhvien";
+const char* googleApiKey = "YOUR_GEOLOCATION_KEY";
+const char* ssid = "YOUR_WIFI_NAME";
+const char* passwd = "YOUR_WIFI_PASS";
 #endif
-#define API_KEY "AIzaSyAALQvKo4d3bWFdlkAVXJr9h5blDDArKV4"
-#define DATABASE_URL "https://smartbin-8cbfd-default-rtdb.firebaseio.com"
+#define API_KEY "YOUR_FIREBASE_API_KEY"
+#define DATABASE_URL "YOUR_FIREBASE_URL"
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
